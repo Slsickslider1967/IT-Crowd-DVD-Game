@@ -9,7 +9,8 @@ using namespace std;
 Clock _deltaClock;
 Time _deltaTime;
 
-Shader _chromaticAbberationshader;
+Shader _screenEffeectShaders;
+Shader _interlaceShader;
 
 // Game resources
 Texture _texture;
@@ -23,7 +24,7 @@ Music _music;
 RenderTexture _renderTexture;
 
 // Resources
-Vector2f _MainTitlePosition = {100.f, 200.f};
+Vector2f _MainTitlePosition = {1.f, 200.f};
 
 /// Function prototypes
 void DrawMainMenu(RenderTarget &_window);
@@ -60,19 +61,22 @@ void LoadContent()
 
     _renderTexture.resize({720, 576});
 
-    //Chromatic aberration shader
-    if (!_chromaticAbberationshader.loadFromFile("assets/shaders/chromatic_abberation.frag", Shader::Type::Fragment))
+    //Screen effect shader
+    if (!_screenEffeectShaders.loadFromFile("assets/shaders/Screen_Effect.frag", Shader::Type::Fragment))
     {
-        cerr << "Failed to load chromatic abberation shader!" << std::endl;
+        cerr << "Failed to load screen effect shader!" << std::endl;
         return;
     }
 
-    _chromaticAbberationshader.setUniform("texture", Shader::CurrentTexture);
-    _chromaticAbberationshader.setUniform("offset", 0.002f);
+    _screenEffeectShaders.setUniform("texture", Shader::CurrentTexture);
+    _screenEffeectShaders.setUniform("offset", 0.002f);
+    _screenEffeectShaders.setUniform("intensity", 0.2f);
+    _screenEffeectShaders.setUniform("Scanlines", 4.f);
     
     cout << "Chromatic aberration shader loaded successfully!" << std::endl;
 
-    //
+
+
     cout << "Game content loaded!" << std::endl;
 }
 
@@ -127,7 +131,7 @@ void Draw(RenderWindow &_window)
     _renderTexture.display();
 
     Sprite renderSprite(_renderTexture.getTexture());
-    _window.draw(renderSprite, &_chromaticAbberationshader);
+    _window.draw(renderSprite, &_screenEffeectShaders);
 
     _window.display();
 }
@@ -206,7 +210,5 @@ void DrawMainMenu(RenderTarget &_window)
         _window.draw(*_MainMenuText);
     }
 
-    //Add interlacing effect
-    //Add slight chromatic aberration effect
     //limit colour palette
 }
