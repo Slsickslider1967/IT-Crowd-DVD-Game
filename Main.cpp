@@ -1,0 +1,212 @@
+#include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
+#include <iostream>
+
+using namespace sf;
+using namespace std;
+
+// Global variables for delta time
+Clock _deltaClock;
+Time _deltaTime;
+
+Shader _chromaticAbberationshader;
+
+// Game resources
+Texture _texture;
+Font _font;
+SoundBuffer _soundBuffer;
+optional<Sound> _sound;
+optional<Sprite> _sprite;
+optional<Text> _MainMenuText;
+Music _music;
+
+RenderTexture _renderTexture;
+
+// Resources
+Vector2f _MainTitlePosition = {100.f, 200.f};
+
+/// Function prototypes
+void DrawMainMenu(RenderTarget &_window);
+
+void Initialize()
+{
+    /// <summary>
+    /// Initializes game resources and states.
+    /// Put your initialization code here.
+    /// </summary>
+    cout << "Game initialized!" << std::endl;
+}
+
+
+void LoadContent()
+{
+    /// <summary>
+    /// Loads game assets such as textures, fonts, and sounds.
+    /// Put your asset loading code here.
+    /// </summary>
+
+    // Main menu font
+    if (!_font.openFromFile("assets/Main Menu Assets/ITC Machine Regular.otf"))
+    {
+        cerr << "Failed to load font!" << std::endl;
+        return;
+    }
+
+    _MainMenuText.emplace(_font);
+    _MainMenuText->setString("THE IT CROWD");
+    _MainMenuText->setCharacterSize(48);
+    _MainMenuText->setPosition(_MainTitlePosition);
+    _MainMenuText->setFillColor(Color::White);
+
+    _renderTexture.resize({720, 576});
+
+    //Chromatic aberration shader
+    if (!_chromaticAbberationshader.loadFromFile("assets/shaders/chromatic_abberation.frag", Shader::Type::Fragment))
+    {
+        cerr << "Failed to load chromatic abberation shader!" << std::endl;
+        return;
+    }
+
+    _chromaticAbberationshader.setUniform("texture", Shader::CurrentTexture);
+    _chromaticAbberationshader.setUniform("offset", 0.002f);
+    
+    cout << "Chromatic aberration shader loaded successfully!" << std::endl;
+
+    //
+    cout << "Game content loaded!" << std::endl;
+}
+
+
+void Update()
+{
+    /// <summary>
+    /// Updates game logic and states.
+    /// Put your game update code here.
+    /// </summary>
+    _deltaTime = _deltaClock.restart();
+}
+
+
+FloatRect GetAspectRatio(VideoMode desktopMode)
+{
+    float targetAspect = 720.f / 576.f;
+    float screenAspect = static_cast<float>(desktopMode.size.x) / static_cast<float>(desktopMode.size.y);
+
+    cout << "Screen resolution: " << desktopMode.size.x << "x" << desktopMode.size.y << endl;
+    cout << "Target aspect: " << targetAspect << endl;
+    cout << "Screen aspect: " << screenAspect << endl;
+
+    FloatRect viewport;
+    if (screenAspect > targetAspect)
+    {
+        float width = targetAspect / screenAspect;
+        viewport = FloatRect({(1.f - width) / 2.f, 0.f}, {width, 1.f});
+        cout << "Using pillarbox (vertical bars)" << endl;
+        cout << "Viewport: x=" << viewport.position.x << " width=" << viewport.size.x << endl;
+    }
+    else
+    {
+        float height = screenAspect / targetAspect;
+        viewport = FloatRect({0.f, (1.f - height) / 2.f}, {1.f, height});
+        cout << "Using letterbox (horizontal bars)" << endl;
+        cout << "Viewport: y=" << viewport.position.y << " height=" << viewport.size.y << endl;
+    }
+    return viewport;
+}
+
+
+void Draw(RenderWindow &_window)
+{
+    /// <summary>
+    /// Renders game objects to the window.
+    /// Put your drawing code here.
+    /// </summary>
+
+    _renderTexture.clear(Color::Black);
+    DrawMainMenu(_renderTexture);
+    _renderTexture.display();
+
+    Sprite renderSprite(_renderTexture.getTexture());
+    _window.draw(renderSprite, &_chromaticAbberationshader);
+
+    _window.display();
+}
+
+
+void Input(const optional<Event> *event, RenderWindow &_window)
+{
+    /// <summary>
+    /// Handles user input events.
+    /// Put your input handling code here.
+    /// </summary>
+    if (const auto *keyPressed = (*event)->getIf<Event::KeyPressed>())
+    {
+        if (keyPressed->code == Keyboard::Key::Escape)
+            _window.close();
+
+        if (keyPressed->code == Keyboard::Key::Space)
+            cout << "Space key pressed!" << std::endl;
+    }
+}
+
+
+void UnloadContent()
+{
+    /// <summary>
+    /// Unloads game assets and cleans up resources.
+    /// Put your cleanup code here.
+    /// </summary>
+    cout << "Game content unloaded!" << std::endl;
+}
+
+
+int main()
+{
+    VideoMode desktopMode = VideoMode::getDesktopMode();
+    RenderWindow _window(desktopMode, "IT Crowd DVD Game", State::Fullscreen);
+    _window.setFramerateLimit(25);
+    FloatRect viewport = GetAspectRatio(desktopMode);
+
+    View view(FloatRect({0.f, 0.f}, {720.f, 576.f}));
+    view.setViewport(viewport);
+    _window.setView(view);
+
+    Initialize();
+    LoadContent();
+
+    while (_window.isOpen())
+    {
+        while (auto event = _window.pollEvent())
+        {
+            if (event->is<Event::Closed>())
+                _window.close();
+
+            Input(&event, _window);
+        }
+
+        Update();
+
+        _window.clear(Color::Black);
+        Draw(_window);
+    }
+
+    UnloadContent();
+    return 0;
+}
+
+
+void DrawMainMenu(RenderTarget &_window)
+{
+    RectangleShape background({720.f, 576.f});
+    background.setFillColor(Color(2, 82, 19));
+    _window.draw(background);
+
+    if (_MainMenuText.has_value())
+    {
+        _window.draw(*_MainMenuText);
+    }
+
+    //Add interlacing effect
+    //Add slight chromatic aberration effect
+    //limit colour palette
+}
