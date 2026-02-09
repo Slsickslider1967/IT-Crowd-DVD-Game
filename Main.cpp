@@ -24,7 +24,7 @@ Music _music;
 RenderTexture _renderTexture;
 
 // Resources
-Vector2f _MainTitlePosition = {1.f, 200.f};
+Vector2f _MainTitlePosition = {640.f, 50.f};
 
 /// Function prototypes
 void DrawMainMenu(RenderTarget &_window);
@@ -57,9 +57,9 @@ void LoadContent()
     _MainMenuText->setString("THE IT CROWD");
     _MainMenuText->setCharacterSize(48);
     _MainMenuText->setPosition(_MainTitlePosition);
-    _MainMenuText->setFillColor(Color::White);
+    _MainMenuText->setFillColor(Color(254, 140, 18));
 
-    _renderTexture.resize({720, 576});
+    _renderTexture.resize({1280, 720});
 
     //Screen effect shader
     if (!_screenEffeectShaders.loadFromFile("assets/shaders/Screen_Effect.frag", Shader::Type::Fragment))
@@ -93,7 +93,7 @@ void Update()
 
 FloatRect GetAspectRatio(VideoMode desktopMode)
 {
-    float targetAspect = 720.f / 576.f;
+    float targetAspect = 16.f / 9.f;
     float screenAspect = static_cast<float>(desktopMode.size.x) / static_cast<float>(desktopMode.size.y);
 
     cout << "Screen resolution: " << desktopMode.size.x << "x" << desktopMode.size.y << endl;
@@ -171,7 +171,7 @@ int main()
     _window.setFramerateLimit(25);
     FloatRect viewport = GetAspectRatio(desktopMode);
 
-    View view(FloatRect({0.f, 0.f}, {720.f, 576.f}));
+    View view(FloatRect({0.f, 0.f}, {1280.f, 720.f}));
     view.setViewport(viewport);
     _window.setView(view);
 
@@ -201,12 +201,17 @@ int main()
 
 void DrawMainMenu(RenderTarget &_window)
 {
-    RectangleShape background({720.f, 576.f});
+    RectangleShape background({1280.f, 720.f});
     background.setFillColor(Color(2, 82, 19));
     _window.draw(background);
 
     if (_MainMenuText.has_value())
     {
+        FloatRect textBounds = _MainMenuText->getLocalBounds();
+        float textWidth = textBounds.size.x;
+
+        _MainMenuText->setPosition({_MainTitlePosition.x - textWidth / 2.f, _MainTitlePosition.y});
+
         _window.draw(*_MainMenuText);
     }
 
