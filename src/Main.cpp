@@ -1,6 +1,8 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
 #include <iostream>
+#include <optional>
+#include "Main_Menu_Animation/Denholm_Jen_MainMenu.cpp"
 
 using namespace sf;
 using namespace std;
@@ -9,7 +11,7 @@ using namespace std;
 Clock _deltaClock;
 Time _deltaTime;
 
-Shader _screenEffeectShaders;
+Shader _screenEffectShaders;
 Shader _interlaceShader;
 
 // Game resources
@@ -28,6 +30,8 @@ optional<Sprite> _Denholm_FootTapSprite;
 optional<Sprite> _RoySprite;
 optional<Sprite> _MossSprite;
 optional<Sprite> _JenSprite;
+optional<Sprite> _RichmondSprite;
+optional<Sprite> _DouglasSprite;
 
 optional<Sprite> _PlayAllButtonSprite;
 optional<Sprite> _EpisodeSelectButtonSprite;
@@ -36,13 +40,17 @@ optional<Sprite> _SetUPButtonSprite;
 
 optional<Sound> _MenuMusic;
 
+optional<SpriteSwapAnimation> Denholm_Jen_MainMenuAnimation;
+
+Vector2f _DenholmPos = {100.f, 300.f}; 
+
 RenderTexture _renderTexture;
 
 // Resources
 Vector2f _MainTitlePosition = {512.f, 50.f};
 
 /// Function prototypes
-void DrawMainMenu(RenderTarget &_window);
+void DrawMainMenu(RenderTarget &target);
 
 
 void Initialize()
@@ -78,11 +86,12 @@ void LoadContent()
     _renderTexture.resize({1024, 576});
 
     //Screen effect shader
-    if (!_screenEffeectShaders.loadFromFile("assets/shaders/Screen_Effect.frag", Shader::Type::Fragment))
+    if (!_screenEffectShaders.loadFromFile("assets/shaders/Screen_Effect.frag", Shader::Type::Fragment))
     {
         cerr << "Failed to load screen effect shader!" << std::endl;
         return;
     }
+
 
     //Main menu Denholm
     if (!_DenholmTexture.loadFromFile("assets/textures/Denholm.png"))
@@ -93,6 +102,7 @@ void LoadContent()
     _DenholmSprite.emplace(_DenholmTexture);
     _DenholmSprite->setOrigin({_DenholmTexture.getSize().x / 2.f, _DenholmTexture.getSize().y / 2.f});
     _DenholmSprite->setScale({5.5f, 5.5f});
+    _DenholmSprite->setPosition(_DenholmPos);
 
     if (!_Denholm_FootTapTexture.loadFromFile("assets/textures/Denholm_FootTap.png"))
     {
@@ -102,13 +112,22 @@ void LoadContent()
     _Denholm_FootTapSprite.emplace(_Denholm_FootTapTexture);
     _Denholm_FootTapSprite->setOrigin({_Denholm_FootTapTexture.getSize().x / 2.f, _Denholm_FootTapTexture.getSize().y / 2.f});
     _Denholm_FootTapSprite->setScale({5.5f, 5.5f});
+    _Denholm_FootTapSprite->setPosition(_DenholmPos);
+
+    
+
+    Denholm_Jen_MainMenuAnimation.emplace(_DenholmSprite, _Denholm_FootTapSprite);
+    Denholm_Jen_MainMenuAnimation->setMaxTaps(10);
+    Denholm_Jen_MainMenuAnimation->setAnimationTimer(0.3f);
+    Denholm_Jen_MainMenuAnimation->setPauseDuration(5.f);
 
 
-
-    _screenEffeectShaders.setUniform("texture", Shader::CurrentTexture);
-    _screenEffeectShaders.setUniform("offset", 0.008f);
-    _screenEffeectShaders.setUniform("intensity", 0.2f);
-    _screenEffeectShaders.setUniform("Scanlines", 2.5f);
+    // Set shader uniforms
+    _screenEffectShaders.setUniform("texture", Shader::CurrentTexture);
+    _screenEffectShaders.setUniform("center", Vector2f(1.0, 0.5));
+    _screenEffectShaders.setUniform("offset", 0.006f);
+    _screenEffectShaders.setUniform("intensity", 0.2f);
+    _screenEffectShaders.setUniform("Scanlines", 2.5f);
     
     cout << "Chromatic aberration shader loaded successfully!" << std::endl;
 
@@ -126,16 +145,9 @@ void Update()
     /// </summary>
     _deltaTime = _deltaClock.restart();
 
-    static float DenholmFootTapTimer = 0.f;
-    DenholmFootTapTimer += _deltaTime.asSeconds();
-
-    if (DenholmFootTapTimer >= 0.2f)
+    if (Denholm_Jen_MainMenuAnimation.has_value())
     {
-        if (_DenholmSprite.has_value() && _Denholm_FootTapSprite.has_value())
-        {
-            swap(*_DenholmSprite, *_Denholm_FootTapSprite);
-        }
-        DenholmFootTapTimer = 0.f;
+        Denholm_Jen_MainMenuAnimation->Update();
     }
 
 }
@@ -181,7 +193,7 @@ void Draw(RenderWindow &_window)
     _renderTexture.display();
 
     Sprite renderSprite(_renderTexture.getTexture());
-    _window.draw(renderSprite, &_screenEffeectShaders);
+    _window.draw(renderSprite, &_screenEffectShaders);
 
     _window.display();
 }
@@ -249,12 +261,11 @@ int main()
 }
 
 
-void DrawMainMenu(RenderTarget &_window)
+void DrawMainMenu(RenderTarget &target)
 {
     RectangleShape background({1024.f, 576.f});
     background.setFillColor(Color(2, 82, 19));
-    _window.draw(background);
-
+    target.draw(background);
     if (_MainMenuText.has_value())
     {
         FloatRect textBounds = _MainMenuText->getLocalBounds();
@@ -262,15 +273,12 @@ void DrawMainMenu(RenderTarget &_window)
 
         _MainMenuText->setPosition({_MainTitlePosition.x - textWidth / 2.f, _MainTitlePosition.y});
 
-        _window.draw(*_MainMenuText);
+        target.draw(*_MainMenuText);
     }
-    
-    if (_DenholmSprite.has_value())
+
+    if (Denholm_Jen_MainMenuAnimation.has_value())
     {
-        _DenholmSprite->setPosition({100.f, 288.f});
-
-        _window.draw(*_DenholmSprite);
+        Denholm_Jen_MainMenuAnimation->draw(target);
     }
-
     //limit colour palette
 }

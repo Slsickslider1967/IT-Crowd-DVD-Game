@@ -7,7 +7,7 @@ BUILD_DIR = build
 BIN_DIR = bin
 
 TARGET = $(BIN_DIR)/Main
-SOURCES = $(wildcard $(SRC_DIR)/*.cpp)
+SOURCES = $(shell find $(SRC_DIR) -name '*.cpp')
 OBJECTS = $(SOURCES:$(SRC_DIR)/%.cpp=$(BUILD_DIR)/%.o)
 
 .PHONY: all clean run
@@ -17,7 +17,8 @@ all: $(TARGET)
 $(TARGET): $(OBJECTS) | $(BIN_DIR)
 	$(CXX) $(OBJECTS) -o $(TARGET) $(LDFLAGS)
 
-$(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp | $(BUILD_DIR)
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
+	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(BIN_DIR) $(BUILD_DIR):

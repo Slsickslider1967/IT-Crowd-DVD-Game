@@ -1,6 +1,7 @@
 #version 130
 
 uniform sampler2D texture;
+uniform vec2 center;
 uniform float offset;
 uniform float intensity;
 uniform float Scanlines;
@@ -9,7 +10,6 @@ uniform float time;
 void main()
 {
     vec2 texCoord = gl_TexCoord[0].xy;
-    vec2 center = vec2(0.5, 0.5);
     vec2 direction = texCoord - center;
     
     // Chromatic aberration: Sample each color channel with slight offset
