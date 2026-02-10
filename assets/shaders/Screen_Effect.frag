@@ -4,6 +4,7 @@ uniform sampler2D texture;
 uniform float offset;
 uniform float intensity;
 uniform float Scanlines;
+uniform float time;
 
 void main()
 {
@@ -19,7 +20,8 @@ void main()
     vec4 color = vec4(r, g, b, 1.0);
     
     // Interlacing/scanlines: Darken every other line
-    if (mod(floor(gl_FragCoord.y), Scanlines) == 0.0) {
+    float scanlinePos = gl_FragCoord.y + (time * 100.0);
+    if (mod(floor(scanlinePos), Scanlines) == 0.0) {
         color.rgb *= intensity;
     }
     

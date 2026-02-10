@@ -13,7 +13,6 @@ Shader _screenEffeectShaders;
 Shader _interlaceShader;
 
 // Game resources
-Texture _texture;
 Font _font;
 SoundBuffer _soundBuffer;
 optional<Sound> _sound;
@@ -21,13 +20,30 @@ optional<Sprite> _sprite;
 optional<Text> _MainMenuText;
 Music _music;
 
+//Main menu resources
+Texture _DenholmTexture;
+optional<Sprite> _DenholmSprite;
+Texture _Denholm_FootTapTexture;
+optional<Sprite> _Denholm_FootTapSprite; 
+optional<Sprite> _RoySprite;
+optional<Sprite> _MossSprite;
+optional<Sprite> _JenSprite;
+
+optional<Sprite> _PlayAllButtonSprite;
+optional<Sprite> _EpisodeSelectButtonSprite;
+optional<Sprite> _ExtrasButtonSprite;
+optional<Sprite> _SetUPButtonSprite; 
+
+optional<Sound> _MenuMusic;
+
 RenderTexture _renderTexture;
 
 // Resources
-Vector2f _MainTitlePosition = {640.f, 50.f};
+Vector2f _MainTitlePosition = {512.f, 50.f};
 
 /// Function prototypes
 void DrawMainMenu(RenderTarget &_window);
+
 
 void Initialize()
 {
@@ -47,7 +63,7 @@ void LoadContent()
     /// </summary>
 
     // Main menu font
-    if (!_font.openFromFile("assets/Main Menu Assets/ITC Machine Regular.otf"))
+    if (!_font.openFromFile("assets/fonts/ITC Machine Regular.otf"))
     {
         cerr << "Failed to load font!" << std::endl;
         return;
@@ -59,7 +75,7 @@ void LoadContent()
     _MainMenuText->setPosition(_MainTitlePosition);
     _MainMenuText->setFillColor(Color(254, 140, 18));
 
-    _renderTexture.resize({1280, 720});
+    _renderTexture.resize({1024, 576});
 
     //Screen effect shader
     if (!_screenEffeectShaders.loadFromFile("assets/shaders/Screen_Effect.frag", Shader::Type::Fragment))
@@ -68,10 +84,31 @@ void LoadContent()
         return;
     }
 
+    //Main menu Denholm
+    if (!_DenholmTexture.loadFromFile("assets/textures/Denholm.png"))
+    {
+        cerr << "Failed to load Denholm texture!" << std::endl;
+        return;
+    }
+    _DenholmSprite.emplace(_DenholmTexture);
+    _DenholmSprite->setOrigin({_DenholmTexture.getSize().x / 2.f, _DenholmTexture.getSize().y / 2.f});
+    _DenholmSprite->setScale({5.5f, 5.5f});
+
+    if (!_Denholm_FootTapTexture.loadFromFile("assets/textures/Denholm_FootTap.png"))
+    {
+        cerr << "Failed to load Denholm Foot Tap texture!" << std::endl;
+        return;
+    }
+    _Denholm_FootTapSprite.emplace(_Denholm_FootTapTexture);
+    _Denholm_FootTapSprite->setOrigin({_Denholm_FootTapTexture.getSize().x / 2.f, _Denholm_FootTapTexture.getSize().y / 2.f});
+    _Denholm_FootTapSprite->setScale({5.5f, 5.5f});
+
+
+
     _screenEffeectShaders.setUniform("texture", Shader::CurrentTexture);
-    _screenEffeectShaders.setUniform("offset", 0.002f);
+    _screenEffeectShaders.setUniform("offset", 0.008f);
     _screenEffeectShaders.setUniform("intensity", 0.2f);
-    _screenEffeectShaders.setUniform("Scanlines", 4.f);
+    _screenEffeectShaders.setUniform("Scanlines", 2.5f);
     
     cout << "Chromatic aberration shader loaded successfully!" << std::endl;
 
@@ -88,6 +125,19 @@ void Update()
     /// Put your game update code here.
     /// </summary>
     _deltaTime = _deltaClock.restart();
+
+    static float DenholmFootTapTimer = 0.f;
+    DenholmFootTapTimer += _deltaTime.asSeconds();
+
+    if (DenholmFootTapTimer >= 0.2f)
+    {
+        if (_DenholmSprite.has_value() && _Denholm_FootTapSprite.has_value())
+        {
+            swap(*_DenholmSprite, *_Denholm_FootTapSprite);
+        }
+        DenholmFootTapTimer = 0.f;
+    }
+
 }
 
 
@@ -171,7 +221,7 @@ int main()
     _window.setFramerateLimit(25);
     FloatRect viewport = GetAspectRatio(desktopMode);
 
-    View view(FloatRect({0.f, 0.f}, {1280.f, 720.f}));
+    View view(FloatRect({0.f, 0.f}, {1024.f, 576.f}));
     view.setViewport(viewport);
     _window.setView(view);
 
@@ -201,7 +251,7 @@ int main()
 
 void DrawMainMenu(RenderTarget &_window)
 {
-    RectangleShape background({1280.f, 720.f});
+    RectangleShape background({1024.f, 576.f});
     background.setFillColor(Color(2, 82, 19));
     _window.draw(background);
 
@@ -213,6 +263,13 @@ void DrawMainMenu(RenderTarget &_window)
         _MainMenuText->setPosition({_MainTitlePosition.x - textWidth / 2.f, _MainTitlePosition.y});
 
         _window.draw(*_MainMenuText);
+    }
+    
+    if (_DenholmSprite.has_value())
+    {
+        _DenholmSprite->setPosition({100.f, 288.f});
+
+        _window.draw(*_DenholmSprite);
     }
 
     //limit colour palette
