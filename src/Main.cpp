@@ -27,6 +27,13 @@ Texture _DenholmTexture;
 optional<Sprite> _DenholmSprite;
 Texture _Denholm_FootTapTexture;
 optional<Sprite> _Denholm_FootTapSprite; 
+Texture _Denholm_BlinkTexture;
+optional<Sprite> _Denholm_BlinkSprite;
+Texture _Denholm_RightMovingTexture;
+optional<Sprite> _Denholm_RightMovingSprite;
+Texture _Denholm_RightWalk;
+optional<Sprite> _Denholm_RightWalkSprite;
+
 optional<Sprite> _RoySprite;
 optional<Sprite> _MossSprite;
 optional<Sprite> _JenSprite;
@@ -102,7 +109,6 @@ void LoadContent()
     _DenholmSprite.emplace(_DenholmTexture);
     _DenholmSprite->setOrigin({_DenholmTexture.getSize().x / 2.f, _DenholmTexture.getSize().y / 2.f});
     _DenholmSprite->setScale({5.5f, 5.5f});
-    _DenholmSprite->setPosition(_DenholmPos);
 
     if (!_Denholm_FootTapTexture.loadFromFile("assets/textures/Denholm_FootTap.png"))
     {
@@ -112,11 +118,35 @@ void LoadContent()
     _Denholm_FootTapSprite.emplace(_Denholm_FootTapTexture);
     _Denholm_FootTapSprite->setOrigin({_Denholm_FootTapTexture.getSize().x / 2.f, _Denholm_FootTapTexture.getSize().y / 2.f});
     _Denholm_FootTapSprite->setScale({5.5f, 5.5f});
-    _Denholm_FootTapSprite->setPosition(_DenholmPos);
 
-    
+    if (!_Denholm_BlinkTexture.loadFromFile("assets/textures/Denholm_Blink.png"))
+    {
+        cerr << "Failed to load Denholm Blink texture!" << std::endl;
+        return;
+    }
+    _Denholm_BlinkSprite.emplace(_Denholm_BlinkTexture);
+    _Denholm_BlinkSprite->setOrigin({_Denholm_BlinkTexture.getSize().x / 2.f, _Denholm_BlinkTexture.getSize().y / 2.f});
+    _Denholm_BlinkSprite->setScale({5.5f, 5.5f});
 
-    Denholm_Jen_MainMenuAnimation.emplace(_DenholmSprite, _Denholm_FootTapSprite);
+    if (!_Denholm_RightMovingTexture.loadFromFile("assets/textures/Denholm_RightMoving.png"))
+    {
+        cerr << "Failed to load Denholm Right Moving texture!" << std::endl;
+        return;
+    }
+    _Denholm_RightMovingSprite.emplace(_Denholm_RightMovingTexture);
+    _Denholm_RightMovingSprite->setOrigin({_Denholm_RightMovingTexture.getSize().x / 2.f, _Denholm_RightMovingTexture.getSize().y / 2.f});
+    _Denholm_RightMovingSprite->setScale({5.5f, 5.5f});
+
+    if (!_Denholm_RightWalk.loadFromFile("assets/textures/Denholm_RightWalk.png"))
+    {
+        cerr << "Failed to load Denholm Right Walk texture!" << std::endl;
+        return;
+    }
+    _Denholm_RightWalkSprite.emplace(_Denholm_RightWalk);
+    _Denholm_RightWalkSprite->setOrigin({_Denholm_RightWalk.getSize().x / 2.f, _Denholm_RightWalk.getSize().y / 2.f});
+    _Denholm_RightWalkSprite->setScale({5.5f, 5.5f});
+
+    Denholm_Jen_MainMenuAnimation.emplace(_DenholmSprite, _Denholm_FootTapSprite, _Denholm_BlinkSprite, _Denholm_RightMovingSprite, _Denholm_RightWalkSprite) ;
     Denholm_Jen_MainMenuAnimation->setMaxTaps(10);
     Denholm_Jen_MainMenuAnimation->setAnimationTimer(0.3f);
     Denholm_Jen_MainMenuAnimation->setPauseDuration(5.f);
@@ -125,9 +155,10 @@ void LoadContent()
     // Set shader uniforms
     _screenEffectShaders.setUniform("texture", Shader::CurrentTexture);
     _screenEffectShaders.setUniform("center", Vector2f(1.0, 0.5));
-    _screenEffectShaders.setUniform("offset", 0.006f);
+    _screenEffectShaders.setUniform("offset", 0.0045f); //Chromatic aberration offset
     _screenEffectShaders.setUniform("intensity", 0.2f);
     _screenEffectShaders.setUniform("Scanlines", 2.5f);
+    _screenEffectShaders.setUniform("colorLevels", 8);
     
     cout << "Chromatic aberration shader loaded successfully!" << std::endl;
 

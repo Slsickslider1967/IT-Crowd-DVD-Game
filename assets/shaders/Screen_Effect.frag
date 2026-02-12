@@ -6,6 +6,7 @@ uniform float offset;
 uniform float intensity;
 uniform float Scanlines;
 uniform float time;
+uniform int colorLevels;
 
 void main()
 {
@@ -25,5 +26,12 @@ void main()
         color.rgb *= intensity;
     }
     
+    if (colorLevels > 0) {
+        float levels = float(colorLevels);
+        color.r = floor(color.r * levels) / levels;
+        color.g = floor(color.g * levels) / levels;
+        color.b = floor(color.b * levels) / levels;
+    }
+
     gl_FragColor = color;
 }
